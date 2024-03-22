@@ -10,12 +10,12 @@ import (
 )
 
 var (
-	cep = *flag.String("cep", "01153000", "CEP to search")
+	cep = flag.String("cep", "01153000", "CEP to search")
 )
 
 func init() {
 	flag.Parse()
-	if cep == "" {
+	if *cep == "" {
 		log.Panic("CEP is required")
 	}
 }
@@ -24,8 +24,8 @@ func main() {
 	viaCepChan := make(chan viacepResponse)
 	brasilApiChan := make(chan brasilapiResponse)
 
-	go getViaCep(viaCepChan, cep)
-	go getBrasilApi(brasilApiChan, cep)
+	go getViaCep(viaCepChan, *cep)
+	go getBrasilApi(brasilApiChan, *cep)
 
 	select {
 	case viaCep := <-viaCepChan:
