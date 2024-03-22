@@ -40,7 +40,7 @@ func main() {
 func print(response any, from string) {
 	res, err := json.Marshal(response)
 	if err != nil {
-		log.Fatalf(wrap(from, err).Error())
+		log.Fatalf(fmt.Errorf("print error: %w", err).Error())
 	}
 	log.Printf("Response through %s:\n %s", from, string(res))
 }
@@ -58,18 +58,19 @@ type viacepResponse struct {
 	Siafi       string `json:"siafi"`
 }
 
-func getViaCep(ch chan<- *viacepResponse, cep string) error {
+func getViaCep(ch chan<- *viacepResponse, cep string) {
 	res, err := http.Get("https://viacep.com.br/ws/" + cep + "/json")
 	if err != nil {
-		return wrap("getViaCep", err)
+		log.Println(fmt.Errorf("getViaCep error: %w", err))
+		return
 	}
 	defer res.Body.Close()
 	var address viacepResponse
 	if err := json.NewDecoder(res.Body).Decode(&address); err != nil {
-		return wrap("getViaCep", err)
+		log.Println(fmt.Errorf("getViaCep error: %w", err))
+		return
 	}
 	ch <- &address
-	return nil
 }
 
 type brasilapiResponse struct {
@@ -81,20 +82,17 @@ type brasilapiResponse struct {
 	Service      string `json:"service"`
 }
 
-func getBrasilApi(ch chan<- *brasilapiResponse, cep string) error {
+func getBrasilApi(ch chan<- *brasilapiResponse, cep string) {
 	res, err := http.Get("https://brasilapi.com.br/api/cep/v1/" + cep)
 	if err != nil {
-		return wrap("getBrasilApi", err)
+		log.Println(fmt.Errorf("getBrasilApi error: %w", err))
+		return
 	}
 	defer res.Body.Close()
 	var address brasilapiResponse
 	if err := json.NewDecoder(res.Body).Decode(&address); err != nil {
-		return wrap("getBrasilApi", err)
+		log.Println(fmt.Errorf("getBrasilApi error: %w", err))
+		return
 	}
 	ch <- &address
-	return nil
-}
-
-func wrap(from string, err error) error {
-	return fmt.Errorf("%s error: %w", from, err)
 }
